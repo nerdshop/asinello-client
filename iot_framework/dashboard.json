@@ -1,0 +1,9 @@
+[
+
+    {
+        "name": "encoder",
+        "type": "uint16_t",
+        "direction": "display"
+    }
+
+]

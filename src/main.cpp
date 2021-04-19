@@ -7,6 +7,13 @@
 #include "fetch.h"
 #include "configManager.h"
 #include "timeSync.h"
+#include "dashboard.h"
+#include <TZ.h>
+
+#include "Encoder.h"
+
+
+// Encoder encoder(D5, D6);
 
 void setup() 
 {
@@ -16,7 +23,8 @@ void setup()
     GUI.begin();
     configManager.begin();
     WiFiManager.begin(configManager.data.projectName);
-    timeSync.begin();
+    timeSync.begin(TZ_Europe_Berlin);
+    dash.begin(750);
 
     Serial.println("Hello world");
 }
@@ -27,6 +35,8 @@ void loop()
     WiFiManager.loop();
     updater.loop();
     configManager.loop();
+    dash.loop();
 
-    //your code here
+    // dash.data.encoder = encoder.read();
+
 }
