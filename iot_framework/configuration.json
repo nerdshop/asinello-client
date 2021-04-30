@@ -17,11 +17,11 @@
         "value": true
     },    
     {
-        "name": "dummyFloat",
-        "type": "float",
-        "min": 1,
-        "max": 10,
-        "value": 1.2345
+        "name": "Brightness",
+        "type": "uint16_t",
+        "min": 0,
+        "max": 255,
+        "value": 63
     },
     {
         "name": "dummyString",
