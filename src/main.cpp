@@ -13,7 +13,7 @@
 #include "Encoder.h"
 
 
-// Encoder encoder(D5, D6);
+Encoder encoder(D1, D2);
 
 void setup() 
 {
@@ -37,6 +37,6 @@ void loop()
     configManager.loop();
     dash.loop();
 
-    // dash.data.encoder = encoder.read();
+    dash.data.encoder = encoder.read();
 
 }
