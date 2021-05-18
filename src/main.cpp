@@ -22,6 +22,26 @@ Encoder encoder(D1, D2);
 
 CRGB leds[NUM_LEDS];
 
+int encoderValue = 0;
+
+void setLed(int num)
+{
+  for (int i = 0; i < NUM_LEDS; i++)
+  {
+    if (i == num % NUM_LEDS)
+    {
+      leds[i] = 0x00FFFFFF;
+    }
+    else
+    {
+      leds[i] = 0;
+    }
+  }
+
+  FastLED.show();
+}
+
+
 void setup()
 {
   Serial.begin(115200);
@@ -37,9 +57,9 @@ void setup()
   FastLED.addLeds<CHIPSET, D7, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
 
   Serial.println("Hello world");
-}
 
-int encoderValue = 0;
+  setLed(encoderValue);
+}
 
 void loop()
 {
@@ -48,35 +68,27 @@ void loop()
   updater.loop();
   configManager.loop();
   dash.loop();
-  
-  if (FastLED.getBrightness() != configManager.data.Brightness) {
+
+  if (FastLED.getBrightness() != configManager.data.Brightness)
+  {
     FastLED.setBrightness(configManager.data.Brightness);
     FastLED.show();
   }
-
-  int newEncoderValue = (encoder.read() + 2) / 4;
-  while (newEncoderValue < 0) {
+  int rawEncoder = encoder.read();
+  int newEncoderValue = (rawEncoder + 2) / 4;
+  while (newEncoderValue < 0)
+  {
     //TODO: find better approach
     newEncoderValue += NUM_LEDS;
   }
 
   if (newEncoderValue != encoderValue)
   {
-    encoderValue = newEncoderValue;
     dash.data.encoder = encoderValue;
 
-    for (int i = 0; i < NUM_LEDS; i++)
-    {
-      if (i == encoderValue % NUM_LEDS)
-      {
-        leds[i] = 0x00FFFFFF;
-      }
-      else
-      {
-        leds[i] = 0;
-      }
-    }
-
-    FastLED.show();
+    encoderValue = newEncoderValue;
+    setLed(encoderValue);
   }
+
 }
+
