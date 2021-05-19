@@ -26,9 +26,11 @@
 
 #if ASYNC_TCP_SSL_ENABLED
 #define MQTT_SECURE true
-#define MQTT_SERVER_FINGERPRINT {0xCA, 0xEB, 0x9E, 0xE7, 0x60, 0x47, 0x13, 0x4C, 0x2F, 0x56, 0xB9, 0x79, 0x70, 0x9D, 0x48, 0x18, 0xCE, 0x07, 0x31, 0xA7}
+#define MQTT_SERVER_FINGERPRINT                                                                                            \
+  {                                                                                                                        \
+    0xCA, 0xEB, 0x9E, 0xE7, 0x60, 0x47, 0x13, 0x4C, 0x2F, 0x56, 0xB9, 0x79, 0x70, 0x9D, 0x48, 0x18, 0xCE, 0x07, 0x31, 0xA7 \
+  }
 #endif
-
 
 Encoder encoder(D1, D2);
 
@@ -79,15 +81,22 @@ void onMqttConnect(bool sessionPresent)
   Serial.println(packetIdPub2);
 }
 
-void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
+void onMqttDisconnect(AsyncMqttClientDisconnectReason reason)
+{
   Serial.println("Disconnected from MQTT.");
 
-  if (reason == AsyncMqttClientDisconnectReason::TLS_BAD_FINGERPRINT) {
+  switch (reason)
+  {
+  case AsyncMqttClientDisconnectReason::TLS_BAD_FINGERPRINT:
     Serial.println("Bad server fingerprint.");
+    break;
+
+  default:
+    Serial.println((int8_t) reason);
+    break;
   }
-
+  
 }
-
 
 void setup()
 {
@@ -101,7 +110,6 @@ void setup()
   mqttClient.onConnect(onMqttConnect);
   mqttClient.onDisconnect(onMqttDisconnect);
 
-
   LittleFS.begin();
   GUI.begin();
   configManager.begin();
@@ -111,10 +119,9 @@ void setup()
 
   FastLED.addLeds<CHIPSET, D7, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
 
-  Serial.println("Hello world");
-
   WiFi.onStationModeGotIP(onWifiConnect);
-  if (WiFi.isConnected()) {
+  if (WiFi.isConnected())
+  {
     mqttClient.connect();
   }
 
