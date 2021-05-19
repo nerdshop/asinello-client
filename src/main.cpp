@@ -26,7 +26,9 @@
 
 #if ASYNC_TCP_SSL_ENABLED
 #define MQTT_SECURE true
+#define MQTT_SERVER_FINGERPRINT {0xCA, 0xEB, 0x9E, 0xE7, 0x60, 0x47, 0x13, 0x4C, 0x2F, 0x56, 0xB9, 0x79, 0x70, 0x9D, 0x48, 0x18, 0xCE, 0x07, 0x31, 0xA7}
 #endif
+
 
 Encoder encoder(D1, D2);
 
@@ -53,12 +55,14 @@ void setLed(int num)
   FastLED.show();
 }
 
-
-void onWifiConnect(const WiFiEventStationModeGotIP& event) {
-    mqttClient.connect();
+void onWifiConnect(const WiFiEventStationModeGotIP &event)
+{
+  Serial.println("Connecting to MQTT...");
+  mqttClient.connect();
 }
 
-void onMqttConnect(bool sessionPresent) {
+void onMqttConnect(bool sessionPresent)
+{
   Serial.println("Connected to MQTT.");
   Serial.print("Session present: ");
   Serial.println(sessionPresent);
@@ -75,10 +79,28 @@ void onMqttConnect(bool sessionPresent) {
   Serial.println(packetIdPub2);
 }
 
+void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
+  Serial.println("Disconnected from MQTT.");
+
+  if (reason == AsyncMqttClientDisconnectReason::TLS_BAD_FINGERPRINT) {
+    Serial.println("Bad server fingerprint.");
+  }
+
+}
+
+
 void setup()
 {
   Serial.begin(115200);
   Serial.println("Starting...");
+
+  mqttClient.setServer(MQTT_HOST, MQTT_PORT);
+  mqttClient.setCredentials(MQTT_USER, MQTT_PASSWORD);
+  mqttClient.setSecure(MQTT_SECURE);
+  mqttClient.addServerFingerprint((const uint8_t[])MQTT_SERVER_FINGERPRINT);
+  mqttClient.onConnect(onMqttConnect);
+  mqttClient.onDisconnect(onMqttDisconnect);
+
 
   LittleFS.begin();
   GUI.begin();
@@ -91,15 +113,12 @@ void setup()
 
   Serial.println("Hello world");
 
-  setLed(encoderValue);
-
   WiFi.onStationModeGotIP(onWifiConnect);
+  if (WiFi.isConnected()) {
+    mqttClient.connect();
+  }
 
-  mqttClient.setServer(MQTT_HOST, MQTT_PORT);
-  mqttClient.setCredentials(MQTT_USER, MQTT_PASSWORD);
-  mqttClient.setSecure(MQTT_SECURE);
-  mqttClient.onConnect(onMqttConnect);
-  mqttClient.connect();
+  setLed(encoderValue);
 }
 
 void loop()
@@ -129,7 +148,7 @@ void loop()
 
     encoderValue = newEncoderValue;
     setLed(encoderValue);
+
+    mqttClient.publish("asinello/rotary", 1, true, String(encoderValue).c_str());
   }
-
 }
-
