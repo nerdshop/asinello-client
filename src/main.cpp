@@ -20,6 +20,9 @@
 
 #include "string"
 
+#include <AceButton.h>
+using namespace ace_button;
+
 #define COLOR_ORDER GRB
 #define CHIPSET WS2812B
 #define NUM_LEDS 12
@@ -92,16 +95,30 @@ void onMqttDisconnect(AsyncMqttClientDisconnectReason reason)
     break;
 
   default:
-    Serial.println((int8_t) reason);
+    Serial.println((int8_t)reason);
     break;
   }
-  
 }
+
+void onButtonEvent(ace_button::AceButton *button, uint8_t eventType,
+                   uint8_t buttonState)
+{
+  Serial.print("Button event ");
+  Serial.print(eventType);
+  Serial.print(" ");
+  Serial.println(buttonState);
+}
+
+ace_button::AceButton aceButton(D3);
 
 void setup()
 {
   Serial.begin(115200);
   Serial.println("Starting...");
+
+  pinMode(D4, OUTPUT);
+  digitalWrite(D4, LOW);
+  pinMode(D3, INPUT_PULLUP);
 
   mqttClient.setServer(MQTT_HOST, MQTT_PORT);
   mqttClient.setCredentials(MQTT_USER, MQTT_PASSWORD);
@@ -126,6 +143,9 @@ void setup()
   }
 
   setLed(encoderValue);
+
+  aceButton.getButtonConfig()->setFeature(ButtonConfig::kFeatureLongPress);
+  aceButton.setEventHandler(onButtonEvent);
 }
 
 void loop()
@@ -158,4 +178,6 @@ void loop()
 
     mqttClient.publish("asinello/rotary", 1, true, String(encoderValue).c_str());
   }
+
+  aceButton.check();
 }
