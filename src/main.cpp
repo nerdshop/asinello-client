@@ -35,7 +35,7 @@ using namespace ace_button;
   }
 #endif
 
-Encoder encoder(D1, D2);
+Encoder encoder(D2, D1);
 
 CRGB leds[NUM_LEDS];
 
@@ -103,10 +103,19 @@ void onMqttDisconnect(AsyncMqttClientDisconnectReason reason)
 void onButtonEvent(ace_button::AceButton *button, uint8_t eventType,
                    uint8_t buttonState)
 {
-  Serial.print("Button event ");
-  Serial.print(eventType);
-  Serial.print(" ");
-  Serial.println(buttonState);
+  switch (eventType)
+  {
+  case AceButton::kEventReleased:
+    Serial.println("Button press");
+    break;
+
+  case AceButton::kEventLongPressed:
+    Serial.println("Button long press");
+    break;
+    
+  default:
+    break;
+  }
 }
 
 ace_button::AceButton aceButton(D3);
@@ -144,7 +153,7 @@ void setup()
 
   setLed(encoderValue);
 
-  aceButton.getButtonConfig()->setFeature(ButtonConfig::kFeatureLongPress);
+  aceButton.getButtonConfig()->setFeature(ButtonConfig::kFeatureLongPress | ButtonConfig::kFeatureSuppressAfterLongPress);
   aceButton.setEventHandler(onButtonEvent);
 }
 
