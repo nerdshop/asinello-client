@@ -84,6 +84,70 @@ void onMqttConnect(bool sessionPresent)
   Serial.println(packetIdPub2);
 }
 
+class PhysicalUserInterfaceMode
+{
+
+public:
+  void loop(){};
+  void onButtonPress()
+  {
+    Serial.println("Button press ignored");
+  };
+  void onButtonLongPress()
+  {
+    Serial.println("Button longpress ignored");
+  };
+};
+
+PhysicalUserInterfaceMode *encoderPositionPUIMode = 0;
+
+PhysicalUserInterfaceMode *brightnessPUIMode = 0;
+
+PhysicalUserInterfaceMode *currentPIOMode = 0;
+
+class EncoderPositionPhysicalUserInterfaceMode : public PhysicalUserInterfaceMode
+{
+
+public:
+  void loop()
+  {
+    int rawEncoder = encoder.read();
+    int newEncoderValue = (rawEncoder + 2) / 4;
+    while (newEncoderValue < 0)
+    {
+      //TODO: find better approach
+      newEncoderValue += NUM_LEDS;
+    }
+
+    if (newEncoderValue != encoderValue)
+    {
+      dash.data.encoder = encoderValue;
+
+      encoderValue = newEncoderValue;
+      setLed(encoderValue);
+
+      // mqttClient.publish("asinello/rotary", 1, true, String(encoderValue).c_str());
+    }
+  }
+
+  void onButtonLongPress() {
+    currentPIOMode = brightnessPUIMode;
+  }
+};
+
+class BrightnessPhysicalUserInterfaceMode : public PhysicalUserInterfaceMode
+{
+public:
+  void onButtonPress()
+  {
+    currentPIOMode = encoderPositionPUIMode;
+  }
+};
+
+EncoderPositionPhysicalUserInterfaceMode encoderPositionPUIModeBla;
+BrightnessPhysicalUserInterfaceMode brighnessPUIModeBla;
+
+
 void onMqttDisconnect(AsyncMqttClientDisconnectReason reason)
 {
   Serial.println("Disconnected from MQTT.");
@@ -106,13 +170,13 @@ void onButtonEvent(ace_button::AceButton *button, uint8_t eventType,
   switch (eventType)
   {
   case AceButton::kEventReleased:
-    Serial.println("Button press");
+    currentPIOMode->onButtonPress();
     break;
 
   case AceButton::kEventLongPressed:
-    Serial.println("Button long press");
+    currentPIOMode->onButtonLongPress();
     break;
-    
+
   default:
     break;
   }
@@ -145,13 +209,17 @@ void setup()
 
   FastLED.addLeds<CHIPSET, D7, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
 
-  WiFi.onStationModeGotIP(onWifiConnect);
-  if (WiFi.isConnected())
-  {
-    mqttClient.connect();
-  }
+  // WiFi.onStationModeGotIP(onWifiConnect);
+  // if (WiFi.isConnected())
+  // {
+  //   mqttClient.connect();
+  // }
 
   setLed(encoderValue);
+
+  encoderPositionPUIMode = &encoderPositionPUIModeBla;
+  brightnessPUIMode = &brighnessPUIModeBla;
+  currentPIOMode = encoderPositionPUIMode;
 
   aceButton.getButtonConfig()->setFeature(ButtonConfig::kFeatureLongPress | ButtonConfig::kFeatureSuppressAfterLongPress);
   aceButton.setEventHandler(onButtonEvent);
@@ -170,23 +238,8 @@ void loop()
     FastLED.setBrightness(configManager.data.Brightness);
     FastLED.show();
   }
-  int rawEncoder = encoder.read();
-  int newEncoderValue = (rawEncoder + 2) / 4;
-  while (newEncoderValue < 0)
-  {
-    //TODO: find better approach
-    newEncoderValue += NUM_LEDS;
-  }
 
-  if (newEncoderValue != encoderValue)
-  {
-    dash.data.encoder = encoderValue;
-
-    encoderValue = newEncoderValue;
-    setLed(encoderValue);
-
-    mqttClient.publish("asinello/rotary", 1, true, String(encoderValue).c_str());
-  }
+  currentPIOMode->loop();
 
   aceButton.check();
 }
