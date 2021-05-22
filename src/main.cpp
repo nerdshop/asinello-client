@@ -130,23 +130,59 @@ public:
     }
   }
 
-  void onButtonLongPress() {
+  void onButtonLongPress()
+  {
     currentPIOMode = brightnessPUIMode;
   }
 };
 
 class BrightnessPhysicalUserInterfaceMode : public PhysicalUserInterfaceMode
 {
+private:
+  bool initialize = true;
+
 public:
+  void loop()
+  {
+    if (initialize)
+    {
+      initialize = false;
+
+      for (int i = 0; i < NUM_LEDS; i++)
+      {
+        leds[i] = 0x00FFFFFF;
+      }
+
+      FastLED.show();
+    }
+
+    const int encoderDiff = encoder.readAndReset();
+    const int brightness = FastLED.getBrightness();
+    const int targetBrightness = constrain(FastLED.getBrightness() + encoderDiff, 0, 255);
+
+    if (targetBrightness != brightness)
+    {
+      Serial.printf("Update brightness: %d\n", targetBrightness);
+
+      FastLED.setBrightness(targetBrightness);
+      FastLED.show();
+    }
+  }
+
   void onButtonPress()
   {
+    if (FastLED.getBrightness() != configManager.data.Brightness)
+    {
+      configManager.data.Brightness = FastLED.getBrightness();
+      configManager.save();
+    }
+    initialize = true;
     currentPIOMode = encoderPositionPUIMode;
   }
 };
 
 EncoderPositionPhysicalUserInterfaceMode encoderPositionPUIModeBla;
 BrightnessPhysicalUserInterfaceMode brighnessPUIModeBla;
-
 
 void onMqttDisconnect(AsyncMqttClientDisconnectReason reason)
 {
@@ -208,6 +244,7 @@ void setup()
   dash.begin(750);
 
   FastLED.addLeds<CHIPSET, D7, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
+  FastLED.setBrightness(configManager.data.Brightness);
 
   // WiFi.onStationModeGotIP(onWifiConnect);
   // if (WiFi.isConnected())
@@ -232,12 +269,6 @@ void loop()
   updater.loop();
   configManager.loop();
   dash.loop();
-
-  if (FastLED.getBrightness() != configManager.data.Brightness)
-  {
-    FastLED.setBrightness(configManager.data.Brightness);
-    FastLED.show();
-  }
 
   currentPIOMode->loop();
 

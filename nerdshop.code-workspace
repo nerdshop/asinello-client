@@ -7,7 +7,16 @@
 	"settings": {
 		"files.associations": {
 			"memory": "cpp",
-			"array": "cpp"
+			"array": "cpp",
+			"*.tcc": "cpp",
+			"bitset": "cpp",
+			"functional": "cpp",
+			"random": "cpp",
+			"fstream": "cpp",
+			"istream": "cpp",
+			"ostream": "cpp",
+			"streambuf": "cpp",
+			"regex": "cpp"
 		}
 	}
 }
