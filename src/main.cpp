@@ -88,12 +88,12 @@ class PhysicalUserInterfaceMode
 {
 
 public:
-  void loop(){};
-  void onButtonPress()
+  virtual void loop(){};
+  virtual void onButtonPress()
   {
     Serial.println("Button press ignored");
   };
-  void onButtonLongPress()
+  virtual void onButtonLongPress()
   {
     Serial.println("Button longpress ignored");
   };
