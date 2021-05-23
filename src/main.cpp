@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include "LittleFS.h"
 
+#include "default_environment.h"
+
 #include "WiFiManager.h"
 #include "webServer.h"
 #include "updater.h"
@@ -218,7 +220,7 @@ void onButtonEvent(ace_button::AceButton *button, uint8_t eventType,
   }
 }
 
-ace_button::AceButton aceButton(D3);
+ace_button::AceButton aceButton(PIN_BUTTON);
 
 void setup()
 {
@@ -227,7 +229,7 @@ void setup()
 
   pinMode(D4, OUTPUT);
   digitalWrite(D4, LOW);
-  pinMode(D3, INPUT_PULLUP);
+  pinMode(PIN_BUTTON, INPUT_PULLUP);
 
   mqttClient.setServer(MQTT_HOST, MQTT_PORT);
   mqttClient.setCredentials(MQTT_USER, MQTT_PASSWORD);
