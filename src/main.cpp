@@ -37,7 +37,7 @@ using namespace ace_button;
   }
 #endif
 
-Encoder encoder(D2, D1);
+Encoder encoder(PIN_ENCODER_1, PIN_ENCODER_2);
 
 CRGB leds[NUM_LEDS];
 
@@ -220,7 +220,7 @@ void setup() {
     timeSync.begin(TZ_Europe_Berlin);
     dash.begin(750);
 
-    CFastLED::addLeds<CHIPSET, D7, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
+    CFastLED::addLeds<CHIPSET, PIN_LEDS, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
     FastLED.setBrightness(configManager.data.Brightness);
 
     // WiFi.onStationModeGotIP(onWifiConnect);
