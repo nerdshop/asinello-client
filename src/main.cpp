@@ -64,17 +64,6 @@ void onMqttConnect(bool sessionPresent) {
     Serial.println("Connected to MQTT.");
     Serial.print("Session present: ");
     Serial.println(sessionPresent);
-    uint16_t packetIdSub = mqttClient.subscribe("test/lol", 2);
-    Serial.print("Subscribing at QoS 2, packetId: ");
-    Serial.println(packetIdSub);
-    mqttClient.publish("test/lol", 0, true, "test 1");
-    Serial.println("Publishing at QoS 0");
-    uint16_t packetIdPub1 = mqttClient.publish("test/lol", 1, true, "test 2");
-    Serial.print("Publishing at QoS 1, packetId: ");
-    Serial.println(packetIdPub1);
-    uint16_t packetIdPub2 = mqttClient.publish("test/lol", 2, true, "test 3");
-    Serial.print("Publishing at QoS 2, packetId: ");
-    Serial.println(packetIdPub2);
 }
 
 class PhysicalUserInterfaceMode {
@@ -116,6 +105,10 @@ public:
 
             // mqttClient.publish("asinello/rotary", 1, true, String(encoderValue).c_str());
         }
+    }
+
+    void onButtonPress() override {
+        mqttClient.publish("asinello/encoder", 1, false, String(encoderValue).c_str());
     }
 
     void onButtonLongPress() override {
@@ -176,6 +169,9 @@ void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
             Serial.println((int8_t) reason);
             break;
     }
+
+    //TODO:
+    //dash.data.error = "MQTT disconnected: " + ((int8_t) reason);
 }
 
 void onButtonEvent(__attribute__((unused)) ace_button::AceButton *button, uint8_t eventType,
@@ -196,6 +192,22 @@ void onButtonEvent(__attribute__((unused)) ace_button::AceButton *button, uint8_
 
 ace_button::AceButton aceButton(PIN_BUTTON);
 
+void setupMqtt() {
+
+    mqttClient.setServer(configManager.data.mqttHost, configManager.data.mqttPort);
+    mqttClient.setCredentials(configManager.data.mqttUser, configManager.data.mqttPassword);
+    mqttClient.setSecure(MQTT_SECURE);
+    mqttClient.addServerFingerprint((const uint8_t[]) MQTT_SERVER_FINGERPRINT);
+    mqttClient.onConnect(onMqttConnect);
+    mqttClient.onDisconnect(onMqttDisconnect);
+
+    mqttClient.connect();
+}
+
+void applyConfiguredBrightness() {
+    FastLED.setBrightness(configManager.data.Brightness);
+}
+
 void setup() {
     Serial.begin(115200);
     Serial.println("Starting...");
@@ -204,22 +216,16 @@ void setup() {
     digitalWrite(D4, LOW);
     pinMode(PIN_BUTTON, INPUT_PULLUP);
 
-//    mqttClient.setServer(MQTT_HOST, MQTT_PORT);
-//    mqttClient.setCredentials(MQTT_USER, MQTT_PASSWORD);
-//    mqttClient.setSecure(MQTT_SECURE);
-//    mqttClient.addServerFingerprint((const uint8_t[]) MQTT_SERVER_FINGERPRINT);
-//    mqttClient.onConnect(onMqttConnect);
-//    mqttClient.onDisconnect(onMqttDisconnect);
 
     LittleFS.begin();
     GUI.begin();
     configManager.begin();
-    WiFiManager.begin(configManager.data.projectName);
+    WiFiManager.begin("Asinello");
     timeSync.begin(TZ_Europe_Berlin);
     dash.begin(750);
 
     CFastLED::addLeds<CHIPSET, PIN_LEDS, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
-    FastLED.setBrightness(configManager.data.Brightness);
+    applyConfiguredBrightness();
 
     // WiFi.onStationModeGotIP(onWifiConnect);
     // if (WiFi.isConnected())
@@ -236,6 +242,13 @@ void setup() {
     aceButton.getButtonConfig()->setFeature(
             ButtonConfig::kFeatureLongPress | ButtonConfig::kFeatureSuppressAfterLongPress);
     aceButton.setEventHandler(onButtonEvent);
+
+    setupMqtt();
+
+    configManager.setConfigSaveCallback([] {
+        applyConfiguredBrightness();
+        setupMqtt();
+    });
 }
 
 void loop() {

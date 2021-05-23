@@ -1,4 +1,10 @@
 [
+    {
+        "name": "error",
+        "type": "char",
+        "length": 48,
+        "direction": "display"
+    },
 
     {
         "name": "encoder",
