@@ -111,7 +111,7 @@ class EncoderPositionPhysicalUserInterfaceMode : public PhysicalUserInterfaceMod
 {
 
 public:
-  void loop()
+  void loop() override
   {
     int rawEncoder = encoder.read();
     int newEncoderValue = (rawEncoder + 2) / 4;
@@ -132,7 +132,7 @@ public:
     }
   }
 
-  void onButtonLongPress()
+  void onButtonLongPress() override
   {
     currentPIOMode = brightnessPUIMode;
   }
@@ -144,7 +144,7 @@ private:
   bool initialize = true;
 
 public:
-  void loop()
+  void loop() override
   {
     if (initialize)
     {
