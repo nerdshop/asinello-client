@@ -17,8 +17,6 @@
 
 #include "AsyncMqttClient.h"
 
-#include "localproperties.h"
-
 #include "string"
 
 #include <AceButton.h>
@@ -206,12 +204,12 @@ void setup() {
     digitalWrite(D4, LOW);
     pinMode(PIN_BUTTON, INPUT_PULLUP);
 
-    mqttClient.setServer(MQTT_HOST, MQTT_PORT);
-    mqttClient.setCredentials(MQTT_USER, MQTT_PASSWORD);
-    mqttClient.setSecure(MQTT_SECURE);
-    mqttClient.addServerFingerprint((const uint8_t[]) MQTT_SERVER_FINGERPRINT);
-    mqttClient.onConnect(onMqttConnect);
-    mqttClient.onDisconnect(onMqttDisconnect);
+//    mqttClient.setServer(MQTT_HOST, MQTT_PORT);
+//    mqttClient.setCredentials(MQTT_USER, MQTT_PASSWORD);
+//    mqttClient.setSecure(MQTT_SECURE);
+//    mqttClient.addServerFingerprint((const uint8_t[]) MQTT_SERVER_FINGERPRINT);
+//    mqttClient.onConnect(onMqttConnect);
+//    mqttClient.onDisconnect(onMqttDisconnect);
 
     LittleFS.begin();
     GUI.begin();
