@@ -1,0 +1,5 @@
+; Add overrides for your environment here, especially credentials and custom pin configuration
+
+[local]
+build_flags=
+    -DPIN_BUTTON=D3
