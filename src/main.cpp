@@ -97,7 +97,7 @@ PhysicalUserInterfaceMode *encoderPositionPUIMode = nullptr;
 
 PhysicalUserInterfaceMode *brightnessPUIMode = nullptr;
 
-PhysicalUserInterfaceMode *currentPIOMode = 0;
+PhysicalUserInterfaceMode *currentPIOMode = nullptr;
 
 class EncoderPositionPhysicalUserInterfaceMode : public PhysicalUserInterfaceMode {
 
@@ -134,8 +134,8 @@ public:
         if (initialize) {
             initialize = false;
 
-            for (int i = 0; i < NUM_LEDS; i++) {
-                leds[i] = 0x00FFFFFF;
+            for (auto & led : leds) {
+                led = 0x00FFFFFF;
             }
 
             FastLED.show();
@@ -153,7 +153,7 @@ public:
         }
     }
 
-    void onButtonPress() {
+    void onButtonPress() override {
         if (FastLED.getBrightness() != configManager.data.Brightness) {
             configManager.data.Brightness = FastLED.getBrightness();
             configManager.save();
@@ -180,8 +180,8 @@ void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
     }
 }
 
-void onButtonEvent(ace_button::AceButton *button, uint8_t eventType,
-                   uint8_t buttonState) {
+void onButtonEvent(__attribute__((unused)) ace_button::AceButton *button, uint8_t eventType,
+                   __attribute__((unused)) uint8_t buttonState) {
     switch (eventType) {
         case AceButton::kEventReleased:
             currentPIOMode->onButtonPress();
