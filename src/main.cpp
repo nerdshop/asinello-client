@@ -55,6 +55,10 @@ void setLed(int num) {
     FastLED.show();
 }
 
+String getTopicPrefix() {
+    return String("/players/asinello") += WiFi.macAddress();
+}
+
 void onWifiConnect(const WiFiEventStationModeGotIP &event) {
     Serial.println("Connecting to MQTT...");
     mqttClient.connect();
@@ -64,6 +68,17 @@ void onMqttConnect(bool sessionPresent) {
     Serial.println("Connected to MQTT.");
     Serial.print("Session present: ");
     Serial.println(sessionPresent);
+
+    mqttClient.publish((getTopicPrefix() + "/alive").c_str(), 1, true, "true");
+    mqttClient.subscribe("/players/+/ball", 1);
+    mqttClient.subscribe("/players/+/alive", 1);
+    mqttClient.subscribe((getTopicPrefix() + "/ball/drop").c_str(), 1);
+}
+
+void onMqttMessage(char *topic, char *payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index,
+                   size_t total) {
+    Serial.println(topic);
+    Serial.println(payload);
 }
 
 class PhysicalUserInterfaceMode {
@@ -108,7 +123,7 @@ public:
     }
 
     void onButtonPress() override {
-        mqttClient.publish("asinello/encoder", 1, false, String(encoderValue).c_str());
+        mqttClient.publish((getTopicPrefix() + "/suffix").c_str(), 1, false, String(encoderValue).c_str());
     }
 
     void onButtonLongPress() override {
@@ -125,7 +140,7 @@ public:
         if (initialize) {
             initialize = false;
 
-            for (auto & led : leds) {
+            for (auto &led : leds) {
                 led = 0x00FFFFFF;
             }
 
@@ -193,13 +208,15 @@ void onButtonEvent(__attribute__((unused)) ace_button::AceButton *button, uint8_
 ace_button::AceButton aceButton(PIN_BUTTON);
 
 void setupMqtt() {
-
+    mqttClient.setMaxTopicLength(128);
     mqttClient.setServer(configManager.data.mqttHost, configManager.data.mqttPort);
     mqttClient.setCredentials(configManager.data.mqttUser, configManager.data.mqttPassword);
     mqttClient.setSecure(MQTT_SECURE);
     mqttClient.addServerFingerprint((const uint8_t[]) MQTT_SERVER_FINGERPRINT);
     mqttClient.onConnect(onMqttConnect);
     mqttClient.onDisconnect(onMqttDisconnect);
+//    mqttClient.onMessage(onMqttMessage);
+//    mqttClient.setWill((getTopicPrefix() + "/alive").c_str(), 1, true, "false");
 
     mqttClient.connect();
 }
@@ -220,6 +237,7 @@ void setup() {
     LittleFS.begin();
     GUI.begin();
     configManager.begin();
+
     WiFiManager.begin("Asinello");
     timeSync.begin(TZ_Europe_Berlin);
     dash.begin(750);
