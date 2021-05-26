@@ -207,6 +207,7 @@ void onButtonEvent(__attribute__((unused)) ace_button::AceButton *button, uint8_
 
 ace_button::AceButton aceButton(PIN_BUTTON);
 
+
 void setupMqtt() {
     mqttClient.setMaxTopicLength(128);
     mqttClient.setServer(configManager.data.mqttHost, configManager.data.mqttPort);
@@ -215,8 +216,9 @@ void setupMqtt() {
     mqttClient.addServerFingerprint((const uint8_t[]) MQTT_SERVER_FINGERPRINT);
     mqttClient.onConnect(onMqttConnect);
     mqttClient.onDisconnect(onMqttDisconnect);
-//    mqttClient.onMessage(onMqttMessage);
-//    mqttClient.setWill((getTopicPrefix() + "/alive").c_str(), 1, true, "false");
+    mqttClient.onMessage(onMqttMessage);
+//    static const char * willTopic = (getTopicPrefix() + "/alive").c_str();
+//    mqttClient.setWill(willTopic, 1, true, "false");
 
     mqttClient.connect();
 }
